@@ -64,7 +64,7 @@ export const Footer = () => {
             {/* Replace the Image component for the logo */}
             {logoUrl && !logoError ? (
               <Image
-                  src={"/assets/plogic.png"}
+                  src={"/assets/logo.png"}
                   alt="Prime Logic Solutions Logo"
                   width={150}
                   height={50}

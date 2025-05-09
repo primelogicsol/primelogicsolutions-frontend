@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Loader2, Plus, Trash, Eye } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -514,7 +515,7 @@ export function IndustryForm({ id }: { id?: string }) {
                 <div className="flex flex-col">
                   <FormLabel>Image Preview</FormLabel>
                   <div className="mt-2 border rounded-md overflow-hidden h-[150px] bg-gray-50 flex items-center justify-center">
-                    <img
+                    <Image
                       src={imagePreview || "/placeholder.svg"}
                       alt="Preview"
                       className="max-w-full max-h-full object-contain"

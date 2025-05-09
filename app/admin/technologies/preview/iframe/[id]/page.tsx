@@ -1,5 +1,6 @@
 import { getTechnologyById } from "@/lib/technologies"
 import { notFound } from "next/navigation"
+import Image from "next/image"
 
 interface TechnologyPreviewIframeProps {
   params: {
@@ -36,7 +37,7 @@ export default async function TechnologyPreviewIframe({ params, searchParams }: 
         {/* Hero Section */}
         <div className="relative rounded-lg overflow-hidden bg-gray-100 h-64 mb-6">
           {technology.image ? (
-            <img
+            <Image
               src={addTimestampToUrl(technology.image) || "/placeholder.svg"}
               alt={technology.title}
               className="w-full h-full object-cover"

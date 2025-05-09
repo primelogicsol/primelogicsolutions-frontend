@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 
 interface NavigationItem {
@@ -164,6 +165,22 @@ export function HeaderPreview() {
     return categories
   }
 
+  // Get dropdown image based on category
+  const getDropdownImage = (title: string) => {
+    // Map titles to image paths - you can customize these paths
+    const imageMap: { [key: string]: string } = {
+      Services: "/images/services-dropdown.jpg",
+      Industries: "/images/industries-dropdown.jpg",
+      Technologies: "/images/technologies-dropdown.jpg",
+      Products: "/images/products-dropdown.jpg",
+      Solutions: "/images/solutions-dropdown.jpg",
+      // Add more mappings as needed
+    }
+
+    // Return the image path or a default one if not found
+    return imageMap[title] || "/images/default-dropdown.jpg"
+  }
+
   return (
     <div className="w-full">
       {/* Main Navigation */}
@@ -244,10 +261,27 @@ export function HeaderPreview() {
             >
               <div className="container mx-auto px-4 py-6">
                 <div className="flex">
-                  {/* Left sidebar with gradient background */}
-                  <div className="w-1/4 bg-gradient-to-b from-gray-300 to-gray-400 rounded-l-lg p-6 flex flex-col justify-center">
-                    <h2 className="text-2xl font-bold text-white mb-2">{item.title}</h2>
-                    <p className="text-white text-sm">Explore our comprehensive range of {item.title.toLowerCase()}</p>
+                  {/* Left sidebar with gradient background and image */}
+                  <div className="w-1/4 rounded-l-lg p-6 flex flex-col justify-center relative overflow-hidden">
+                    {/* Background image */}
+                    <div className="absolute inset-0 z-0">
+                      <Image
+                        src={getDropdownImage(item.title) || "/placeholder.svg"}
+                        alt={`${item.title} background`}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        className="opacity-80"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#002B5B]/70 to-[#003087]/70"></div>
+                    </div>
+
+                    {/* Content on top of the image */}
+                    <div className="relative z-10">
+                      <h2 className="text-2xl font-bold text-white mb-2">{item.title}</h2>
+                      <p className="text-white text-sm">
+                        Explore our comprehensive range of {item.title.toLowerCase()}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Right content area */}
@@ -292,8 +326,8 @@ export function HeaderPreview() {
                   </div>
                 </div>
 
-                {/* Navigation buttons */}
-                <div className="flex justify-between mt-4">
+                {/* Navigation buttons - Previous button moved to right side below menu */}
+                <div className="flex justify-end mt-4 space-x-4">
                   <button className="bg-gray-200 px-6 py-2 rounded text-gray-600 hover:bg-gray-300">Previous</button>
                   <button className="bg-gray-200 px-6 py-2 rounded text-gray-600 hover:bg-gray-300">Next</button>
                 </div>

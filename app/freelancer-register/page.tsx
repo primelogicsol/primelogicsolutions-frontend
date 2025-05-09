@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -33,7 +34,10 @@ const formSchema = z.object({
 async function submitFreelancerRegistration(formData: z.infer<typeof formSchema>) {
   console.log(typeof formData.yearsOfExperience)
   try {
-    const response = await axios.post("https://api.primelogicsol.com/api/v1/freelancer/getFreeLancerJoinUsRequest", formData);
+    const response = await axios.post(
+      "https://api.primelogicsol.com/api/v1/freelancer/getFreeLancerJoinUsRequest",
+      formData,
+    )
 
     // if (!response.ok) {
     //   const errorData = await response.json()
@@ -98,8 +102,11 @@ export default function RegisterPage() {
   return (
     <div className="container mx-auto max-w-3xl py-10">
       <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Freelancer Registration</CardTitle>
+        <CardHeader className="space-y-1 flex flex-col items-center">
+          <div className="mb-4 flex justify-center">
+            <Image src="/assets/logo6.png" alt="Company Logo" width={150} height={60} priority />
+          </div>
+          <CardTitle className="text-2xl font-bold text-[#003087]">Freelancer Registration</CardTitle>
           <CardDescription>Fill out the form below to register as a freelancer</CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,7 +118,7 @@ export default function RegisterPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Full Name</FormLabel>
                       <FormControl>
                         <Input placeholder="John Doe" {...field} />
                       </FormControl>
@@ -124,7 +131,7 @@ export default function RegisterPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="john@example.com" {...field} />
                       </FormControl>
@@ -140,7 +147,7 @@ export default function RegisterPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Phone Number</FormLabel>
                       <FormControl>
                         <Input placeholder="+1234567890" {...field} />
                       </FormControl>
@@ -153,7 +160,7 @@ export default function RegisterPage() {
                   name="yourPortfolio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Portfolio URL</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Portfolio URL</FormLabel>
                       <FormControl>
                         <Input placeholder="https://yourportfolio.com" {...field} />
                       </FormControl>
@@ -169,7 +176,7 @@ export default function RegisterPage() {
                   name="yourTopProject1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Top Project 1</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Live Project </FormLabel>
                       <FormControl>
                         <Input placeholder="https://project1.com" {...field} />
                       </FormControl>
@@ -182,7 +189,7 @@ export default function RegisterPage() {
                   name="yourTopProject2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Top Project 2</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Github Project </FormLabel>
                       <FormControl>
                         <Input placeholder="https://project2.com" {...field} />
                       </FormControl>
@@ -195,7 +202,7 @@ export default function RegisterPage() {
                   name="yourTopProject3"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Top Project 3</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Own Project</FormLabel>
                       <FormControl>
                         <Input placeholder="https://project3.com" {...field} />
                       </FormControl>
@@ -211,7 +218,7 @@ export default function RegisterPage() {
                   name="niche"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Skills/Niche</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Skills/Niche</FormLabel>
                       <FormControl>
                         <Input placeholder="React, Node.js, UI/UX" {...field} />
                       </FormControl>
@@ -224,7 +231,7 @@ export default function RegisterPage() {
                   name="yearsOfExperience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Years of Experience</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Years of Experience</FormLabel>
                       <FormControl>
                         <Input type="text" placeholder="5" {...field} />
                       </FormControl>
@@ -240,7 +247,7 @@ export default function RegisterPage() {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Address</FormLabel>
                       <FormControl>
                         <Input placeholder="123 Main St" {...field} />
                       </FormControl>
@@ -253,7 +260,7 @@ export default function RegisterPage() {
                   name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Country</FormLabel>
+                      <FormLabel className="text-[#003087] font-medium">Country</FormLabel>
                       <FormControl>
                         <Input placeholder="United States" {...field} />
                       </FormControl>
@@ -268,7 +275,7 @@ export default function RegisterPage() {
                 name="detail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Additional Details</FormLabel>
+                    <FormLabel className="text-[#003087] font-medium">Additional Details</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Tell us why you want to join and any additional information"
@@ -281,7 +288,11 @@ export default function RegisterPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full bg-[#003087] hover:bg-[#002266] text-white"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Submitting..." : "Submit Application"}
               </Button>
             </form>

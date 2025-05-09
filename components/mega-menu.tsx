@@ -167,7 +167,7 @@ export default function MegaMenu({ items, isScrolled }: MegaMenuProps): JSX.Elem
                       <div className="col-span-1">
                         <div className="relative h-[200px] w-[200px] rounded-lg overflow-hidden">
                           <Image
-                            src={item.image !== undefined ? item.image : "/images/menu/default.jpg"}
+                            src={item.image !== undefined ? item.image : "/assets"}
                             alt={`${item.title} featured image`}
                             fill
                             sizes="200px"

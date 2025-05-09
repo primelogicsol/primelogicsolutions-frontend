@@ -11,7 +11,7 @@ const EnterpriseSuite = () => {
   // Define possible image paths to try
   const imagePaths = [
     // First try with environment variable if available
-    process.env.NEXT_PUBLIC_IMAGE_PATH ? `${process.env.NEXT_PUBLIC_IMAGE_PATH}/enterprise.png` : null,
+     `/assets/enterprise.png` ,
     // Then try common public directories
     "/assets/enterprise.png",
     "/images/enterprise.png",
@@ -57,22 +57,25 @@ const EnterpriseSuite = () => {
           >
             {imageError ? (
               <div className="absolute inset-0 flex items-center justify-center text-white text-xl">
-                <p>Enterprise Suite Image</p>
+                <Image
+                  src="/assets/enterprise.png"
+                  alt="Enterprise Suite"
+                  fill
+                  priority
+                  className={`object-cover transition-opacity duration-300`}
+                  sizes="(max-width: 768px) 100vw, 66vw"
+                  />
               </div>
             ) : (
               <div className="relative w-full h-full min-h-[600px]">
                 <Image
-                  src={"/assets/plogic.png"}
+                  src={"/assets/enterprise.png"}
                   alt="Enterprise Suite"
                   fill
                   priority
-                  className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                  className={`object-cover transition-opacity duration-300`}
                   sizes="(max-width: 768px) 100vw, 66vw"
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => {
-                    console.error("Image failed to load from:", currentImage)
-                    tryNextImage()
-                  }}
+                  
                 />
 
                 {/* Show loading state while image is loading */}

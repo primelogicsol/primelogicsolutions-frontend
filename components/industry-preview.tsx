@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -115,7 +116,7 @@ export function IndustryPreview({ industryId, industry, children }: IndustryPrev
           {safeGet(industryData, "image") && (
             <div className="mb-8 flex justify-center">
               <div className="rounded-lg overflow-hidden shadow-md max-w-full">
-                <img
+                <Image
                   src={safeGet(industryData, "image") || "/placeholder.svg"}
                   alt={safeGet(industryData, "title")}
                   className="w-full h-auto max-h-[400px] object-cover"

@@ -16,8 +16,8 @@ export default function SearchSection() {
     console.log("Image base path in search-section:", baseImagePath)
 
     // Set initial image paths using environment variable
-    setMainImgSrc(`${baseImagePath}/Image1.png`)
-    setLogoImgSrc(`${baseImagePath}/logo2.png`)
+    setMainImgSrc(`/assets/Image1.png`)
+    setLogoImgSrc(`/assets/logo2.png`)
   }, [])
 
   const handleMainImgError = () => {

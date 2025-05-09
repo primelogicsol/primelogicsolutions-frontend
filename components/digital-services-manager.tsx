@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -252,7 +253,7 @@ export function DigitalServicesManager({ initialServices = [] }: { initialServic
         {services.map((service) => (
           <Card key={service.id} className="overflow-hidden">
             <div className="relative h-48">
-              <img
+              <Image
                 src={service.image || "/placeholder.svg"}
                 alt={service.title}
                 className="w-full h-full object-cover"

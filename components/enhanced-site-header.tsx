@@ -93,7 +93,7 @@ export default function EnhancedSiteHeader() {
         <Link href="/" className="flex items-center relative z-10">
           {scrolled ? (
             <Image
-              src="/assets/logo1.png" // Image for after scrolling
+              src="/assets/logo.png" // Image for after scrolling
               alt="Logo scrolled"
               width={120}
               height={120}

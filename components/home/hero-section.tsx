@@ -230,7 +230,7 @@ export const HeroSection = ({ slides = [] }: HeroSectionProps) => {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-normal sm:whitespace-nowrap overflow-visible text-center w-full px-2 sm:px-0"
+            className="text-sm sm:text-base md:text-lg mt-4 lg:text-xl xl:text-2xl whitespace-normal sm:whitespace-nowrap overflow-visible text-center w-full py-2 md:py-2 px-2 sm:px-0"
           >
             {sortedSlides[safeIndex].text}
           </motion.p>
