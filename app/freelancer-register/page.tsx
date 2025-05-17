@@ -1,309 +1,530 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/hooks/use-toast"
-import axios from "axios"
+import { useState, useEffect, useMemo } from "react"
+import { FreelancerRegisterLayout } from "./components/layout"
+import WhoYouAre from "./components/who-you-are"
+import CoreRole from "./components/core-role"
+import EliteSkillCards from "./components/elite-skill-card"
+import ToolstackProficiency from "./components/toolstack-proficiency"
+import DomainExperience from "./components/domain-experience"
+import IndustryExperience from "./components/industry-experience"
+import AvailabilityWorkflow from "./components/availability-workflow"
+import SoftSkills from "./components/soft-skills"
+import Certifications from "./components/certifications"
+import ProjectQuoting from "./components/project-quoting"
+import LegalAgreements from "./components/legal-agreements"
 
-// Define the schema for validation
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().min(6, { message: "Please enter a valid phone number." }),
-  yourPortfolio: z.string().url({ message: "Please enter a valid URL." }),
-  yourTopProject1: z.string().url({ message: "Please enter a valid URL." }),
-  yourTopProject2: z.string().url({ message: "Please enter a valid URL." }),
-  yourTopProject3: z.string().url({ message: "Please enter a valid URL." }),
-  detail: z.string().min(10, { message: "Details must be at least 10 characters." }),
-  niche: z.string().min(2, { message: "Please specify your skills/niche." }),
-  address: z.string().min(2, { message: "Please enter your address." }),
-  country: z.string().min(2, { message: "Please enter your country." }),
-  yearsOfExperience: z.string().min(1, { message: "Please enter your years of experience." }),
-})
-
-// Server action to handle form submission
-async function submitFreelancerRegistration(formData: z.infer<typeof formSchema>) {
-  console.log(typeof formData.yearsOfExperience)
-  try {
-    const response = await axios.post(
-      "https://api.primelogicsol.com/api/v1/freelancer/getFreeLancerJoinUsRequest",
-      formData,
-    )
-
-    // if (!response.ok) {
-    //   const errorData = await response.json()
-    //   throw new Error(errorData.error || "Failed to submit registration")
-    // }
-
-    return { success: true }
-  } catch (error) {
-    console.error("Registration error:", error)
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" }
+// Define interfaces for type safety
+interface FreelancerData {
+  whoYouAre: {
+    fullName: string
+    email: string
+    timeZone: string
+    country: string
+    professionalLinks: {
+      github?: string
+      gitlab?: string
+      dribbble?: string
+      behance?: string
+      stackoverflow?: string
+      medium?: string
+      kaggle?: string
+      personalSite?: string
+      linkedin?: string
+    }
+  }
+  coreRole: {
+    primaryDomain: string
+  }
+  eliteSkillCards: {
+    selectedSkills: string[]
+  }
+  toolstackProficiency: {
+    selectedTools: {
+      category: string
+      tools: string[]
+    }[]
+  }
+  domainExperience: {
+    roles: {
+      title: string
+      years: number
+    }[]
+  }
+  industryExperience: {
+    selectedIndustries: string[]
+  }
+  availabilityWorkflow: {
+    weeklyCommitment: number
+    workingHours: string[]
+    collaborationTools: string[]
+    teamStyle: string
+    screenSharing: string
+    availabilityExceptions: string
+  }
+  softSkills: {
+    collaborationStyle: string
+    communicationFrequency: string
+    conflictResolution: string
+    languages: string[]
+    teamVsSolo: string
+  }
+  certifications: {
+    certificates: {
+      name: string
+      url: string
+    }[]
+  }
+  projectQuoting: {
+    compensationPreference: string
+    smallProjectPrice: number
+    midProjectPrice: number
+    longTermPrice: number
+    milestoneTerms: string
+    willSubmitProposals: string
+  }
+  legalAgreements: {
+    agreements: {
+      id: string
+      accepted: boolean
+    }[]
+    identityVerification: {
+      idType: string
+      taxDocType: string
+      addressVerified: boolean
+    }
+    workAuthorization: {
+      interested: boolean
+    }
   }
 }
 
-export default function RegisterPage() {
-  const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+interface Step {
+  number: number
+  name: string
+  requiredFields?: string[]
+}
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      yourPortfolio: "",
-      yourTopProject1: "",
-      yourTopProject2: "",
-      yourTopProject3: "",
-      detail: "",
-      niche: "",
-      address: "",
-      country: "",
-      yearsOfExperience: "",
-    },
+// Storage keys
+const STORAGE_KEYS = {
+  FORM_DATA: "freelancer_register_form_data",
+  CURRENT_STEP: "freelancer_register_current_step",
+}
+
+// Define steps
+const STEPS: Step[] = [
+  {
+    number: 1,
+    name: "Who You Are",
+    requiredFields: ["fullName", "email", "country"],
+  },
+  {
+    number: 2,
+    name: "Core Role",
+    requiredFields: ["primaryDomain"],
+  },
+  {
+    number: 3,
+    name: "Elite Skill Cards",
+    requiredFields: [],
+  },
+  {
+    number: 4,
+    name: "Toolstack Proficiency",
+    requiredFields: [],
+  },
+  {
+    number: 5,
+    name: "Domain Experience",
+    requiredFields: [],
+  },
+  {
+    number: 6,
+    name: "Industry Experience",
+    requiredFields: [],
+  },
+  {
+    number: 7,
+    name: "Availability & Workflow",
+    requiredFields: [],
+  },
+  {
+    number: 8,
+    name: "Soft Skills",
+    requiredFields: [],
+  },
+  {
+    number: 9,
+    name: "Certifications",
+    requiredFields: [],
+  },
+  {
+    number: 10,
+    name: "Project Quoting",
+    requiredFields: [],
+  },
+  {
+    number: 11,
+    name: "Legal Agreements",
+    requiredFields: [],
+  },
+]
+
+export default function FreelancerRegisterPage() {
+  // Initialize form data from localStorage or use default values
+  const [formData, setFormData] = useState<FreelancerData>(() => {
+    // Only run in browser environment
+    if (typeof window !== "undefined") {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEYS.FORM_DATA)
+        if (savedData) {
+          return JSON.parse(savedData)
+        }
+      } catch (error) {
+        console.error("Error loading saved form data:", error)
+      }
+    }
+
+    // Default form data if nothing in localStorage
+    return {
+      whoYouAre: {
+        fullName: "",
+        email: "",
+        timeZone: "",
+        country: "",
+        professionalLinks: {},
+      },
+      coreRole: {
+        primaryDomain: "",
+      },
+      eliteSkillCards: {
+        selectedSkills: [],
+      },
+      toolstackProficiency: {
+        selectedTools: [],
+      },
+      domainExperience: {
+        roles: [],
+      },
+      industryExperience: {
+        selectedIndustries: [],
+      },
+      availabilityWorkflow: {
+        weeklyCommitment: 20,
+        workingHours: [],
+        collaborationTools: [],
+        teamStyle: "",
+        screenSharing: "",
+        availabilityExceptions: "",
+      },
+      softSkills: {
+        collaborationStyle: "",
+        communicationFrequency: "",
+        conflictResolution: "",
+        languages: ["English"],
+        teamVsSolo: "",
+      },
+      certifications: {
+        certificates: [],
+      },
+      projectQuoting: {
+        compensationPreference: "",
+        smallProjectPrice: 0,
+        midProjectPrice: 0,
+        longTermPrice: 0,
+        milestoneTerms: "",
+        willSubmitProposals: "",
+      },
+      legalAgreements: {
+        agreements: [],
+        identityVerification: {
+          idType: "",
+          taxDocType: "",
+          addressVerified: false,
+        },
+        workAuthorization: {
+          interested: false,
+        },
+      },
+    }
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true)
-    try {
-      const result = await submitFreelancerRegistration(values)
-
-      if (!result.success) {
-        throw new Error(result.error || "Something went wrong")
+  // Initialize current step from localStorage or default to 0
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedStep = localStorage.getItem(STORAGE_KEYS.CURRENT_STEP)
+        if (savedStep !== null) {
+          return Number.parseInt(savedStep, 10)
+        }
+      } catch (error) {
+        console.error("Error loading saved step:", error)
       }
+    }
+    return 0
+  })
 
-      toast({
-        title: "Registration successful!",
-        description: "Your application has been submitted.",
-      })
-      // Removed the redirect line
-    } catch (error) {
-      console.error("Submission error:", error)
-      toast({
-        title: "Something went wrong.",
-        description: "Your application couldn't be submitted. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(formData))
+      } catch (error) {
+        console.error("Error saving form data:", error)
+      }
+    }
+  }, [formData])
+
+  // Save current step to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, currentStepIndex.toString())
+      } catch (error) {
+        console.error("Error saving current step:", error)
+      }
+    }
+  }, [currentStepIndex])
+
+  // Function to check if a step is valid
+  const isStepValid = (stepIndex: number): boolean => {
+    switch (stepIndex) {
+      case 0: // Who You Are
+        return (
+          formData.whoYouAre.fullName.trim() !== "" &&
+          formData.whoYouAre.email.trim() !== "" &&
+          formData.whoYouAre.country.trim() !== ""
+        )
+      case 1: // Core Role
+        return formData.coreRole.primaryDomain !== ""
+      case 2: // Elite Skill Cards
+        return formData.eliteSkillCards.selectedSkills.length > 0
+      case 3: // Toolstack Proficiency
+        return formData.toolstackProficiency.selectedTools.length > 0
+      case 4: // Domain Experience
+        return formData.domainExperience.roles.length > 0
+      case 5: // Industry Experience
+        return formData.industryExperience.selectedIndustries.length > 0
+      case 6: // Availability & Workflow
+        return (
+          formData.availabilityWorkflow.workingHours.length > 0 &&
+          formData.availabilityWorkflow.teamStyle !== "" &&
+          formData.availabilityWorkflow.screenSharing !== ""
+        )
+      case 7: // Soft Skills
+        return (
+          formData.softSkills.collaborationStyle !== "" &&
+          formData.softSkills.communicationFrequency !== "" &&
+          formData.softSkills.conflictResolution !== "" &&
+          formData.softSkills.teamVsSolo !== ""
+        )
+      case 8: // Certifications
+        return true // Optional
+      case 9: // Project Quoting
+        return (
+          formData.projectQuoting.compensationPreference !== "" &&
+          (formData.projectQuoting.smallProjectPrice > 0 ||
+            formData.projectQuoting.midProjectPrice > 0 ||
+            formData.projectQuoting.longTermPrice > 0)
+        )
+      case 10: // Legal Agreements
+        const requiredAgreements = ["nda", "workForHire", "scope", "payment", "nonSolicitation", "codeOfConduct"]
+        const allAgreementsAccepted = requiredAgreements.every((id) =>
+          formData.legalAgreements.agreements.some((a) => a.id === id && a.accepted),
+        )
+        const identityVerified =
+          formData.legalAgreements.identityVerification.idType !== "" &&
+          formData.legalAgreements.identityVerification.taxDocType !== ""
+        return allAgreementsAccepted && identityVerified
+      default:
+        return false
     }
   }
 
+  // Navigate to next step
+  const goToNextStep = () => {
+    if (currentStepIndex < STEPS.length - 1) {
+      if (isStepValid(currentStepIndex)) {
+        setCurrentStepIndex((prevIndex) => prevIndex + 1)
+        window.scrollTo(0, 0)
+      } else {
+        console.log("Current step is not valid yet")
+      }
+    }
+  }
+
+  // Navigate to previous step
+  const goToPreviousStep = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex((prevIndex) => prevIndex - 1)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  // Navigate to a specific step
+  const goToStep = (index: number) => {
+    // Only allow navigation to completed steps or the current step
+    if (index >= 0 && index <= currentStepIndex) {
+      setCurrentStepIndex(index)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  // Update form data
+  const updateFormData = (section: keyof FreelancerData, data: any) => {
+    setFormData((prev) => {
+      return {
+        ...prev,
+        [section]: data,
+      }
+    })
+  }
+
+  // Clear saved progress
+  const clearProgress = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP)
+        window.location.reload()
+      } catch (error) {
+        console.error("Error clearing progress:", error)
+      }
+    }
+  }
+
+  // Calculate progress percentage
+  const progressPercentage = Math.round(((currentStepIndex + 1) / STEPS.length) * 100)
+
+  // Get selection count based on current step
+  const getSelectionCount = () => {
+    switch (currentStepIndex) {
+      case 0: // Who You Are
+        return formData.whoYouAre.fullName ? "Personal details added" : "No details added"
+      case 1: // Core Role
+        return formData.coreRole.primaryDomain || "No role selected"
+      case 2: // Elite Skill Cards
+        return `${formData.eliteSkillCards.selectedSkills.length} skills selected`
+      case 3: // Toolstack Proficiency
+        return `${formData.toolstackProficiency.selectedTools.length} tool categories selected`
+      case 4: // Domain Experience
+        return `${formData.domainExperience.roles.length} roles added`
+      case 5: // Industry Experience
+        return `${formData.industryExperience.selectedIndustries.length} industries selected`
+      case 6: // Availability & Workflow
+        return formData.availabilityWorkflow.weeklyCommitment > 0
+          ? `${formData.availabilityWorkflow.weeklyCommitment} hours per week`
+          : "No availability set"
+      case 7: // Soft Skills
+        return formData.softSkills.collaborationStyle ? "Soft skills defined" : "No soft skills defined"
+      case 8: // Certifications
+        return `${formData.certifications.certificates.length} certificates added`
+      case 9: // Project Quoting
+        return formData.projectQuoting.compensationPreference
+          ? `Prefers ${formData.projectQuoting.compensationPreference}`
+          : "No pricing preferences set"
+      case 10: // Legal Agreements
+        const acceptedCount = formData.legalAgreements.agreements.filter((a) => a.accepted).length
+        const totalCount = 8 // Total number of agreements
+        return `${acceptedCount}/${totalCount} agreements accepted`
+      default:
+        return ""
+    }
+  }
+
+  // Render the current step component with props
+  const renderCurrentStepComponent = () => {
+    switch (currentStepIndex) {
+      case 0:
+        return <WhoYouAre data={formData.whoYouAre} onUpdate={(data) => updateFormData("whoYouAre", data)} />
+      case 1:
+        return <CoreRole data={formData.coreRole} onUpdate={(data) => updateFormData("coreRole", data)} />
+      case 2:
+        return (
+          <EliteSkillCards
+            data={formData.eliteSkillCards}
+            primaryDomain={formData.coreRole.primaryDomain}
+            onUpdate={(data) => updateFormData("eliteSkillCards", data)}
+          />
+        )
+      case 3:
+        return (
+          <ToolstackProficiency
+            data={formData.toolstackProficiency}
+            primaryDomain={formData.coreRole.primaryDomain}
+            onUpdate={(data) => updateFormData("toolstackProficiency", data)}
+          />
+        )
+      case 4:
+        return (
+          <DomainExperience
+            data={formData.domainExperience}
+            primaryDomain={formData.coreRole.primaryDomain}
+            onUpdate={(data) => updateFormData("domainExperience", data)}
+          />
+        )
+      case 5:
+        return (
+          <IndustryExperience
+            data={formData.industryExperience}
+            onUpdate={(data) => updateFormData("industryExperience", data)}
+          />
+        )
+      case 6:
+        return (
+          <AvailabilityWorkflow
+            data={formData.availabilityWorkflow}
+            onUpdate={(data) => updateFormData("availabilityWorkflow", data)}
+          />
+        )
+      case 7:
+        return <SoftSkills data={formData.softSkills} onUpdate={(data) => updateFormData("softSkills", data)} />
+      case 8:
+        return (
+          <Certifications
+            data={formData.certifications}
+            primaryDomain={formData.coreRole.primaryDomain}
+            onUpdate={(data) => updateFormData("certifications", data)}
+          />
+        )
+      case 9:
+        return (
+          <ProjectQuoting data={formData.projectQuoting} onUpdate={(data) => updateFormData("projectQuoting", data)} />
+        )
+      case 10:
+        return (
+          <LegalAgreements
+            data={formData.legalAgreements}
+            freelancerName={formData.whoYouAre.fullName}
+            onUpdate={(data) => updateFormData("legalAgreements", data)}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
+  // Prepare steps with validation status for the layout
+  const stepsWithValidation = useMemo(() => {
+    return STEPS.map((step, index) => ({
+      ...step,
+      isValid: isStepValid(index),
+      component: null, // We don't need this anymore
+    }))
+  }, [formData]) // Only recalculate when formData changes
+
   return (
-    <div className="container mx-auto max-w-3xl py-10">
-      <Card>
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="mb-4 flex justify-center">
-            <Image src="/assets/logo6.png" alt="Company Logo" width={150} height={60} priority />
-          </div>
-          <CardTitle className="text-2xl font-bold text-[#003087]">Freelancer Registration</CardTitle>
-          <CardDescription>Fill out the form below to register as a freelancer</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="john@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+1234567890" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="yourPortfolio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Portfolio URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://yourportfolio.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="yourTopProject1"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Live Project </FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://project1.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="yourTopProject2"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Github Project </FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://project2.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="yourTopProject3"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Own Project</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://project3.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="niche"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Skills/Niche</FormLabel>
-                      <FormControl>
-                        <Input placeholder="React, Node.js, UI/UX" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="yearsOfExperience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Years of Experience</FormLabel>
-                      <FormControl>
-                        <Input type="text" placeholder="5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 Main St" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[#003087] font-medium">Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="United States" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="detail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[#003087] font-medium">Additional Details</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Tell us why you want to join and any additional information"
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                className="w-full bg-[#003087] hover:bg-[#002266] text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Application"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex justify-center border-t px-6 py-4">
-          <p className="text-xs text-muted-foreground">
-            By submitting this form, you agree to our terms and conditions.
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+    <FreelancerRegisterLayout
+      currentStepIndex={currentStepIndex}
+      steps={stepsWithValidation}
+      progressPercentage={progressPercentage}
+      goToStep={goToStep}
+      goToNextStep={goToNextStep}
+      goToPreviousStep={goToPreviousStep}
+      clearProgress={clearProgress}
+      selectionCount={getSelectionCount()}
+    >
+      {renderCurrentStepComponent()}
+    </FreelancerRegisterLayout>
   )
 }
